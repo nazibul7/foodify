@@ -28,7 +28,7 @@ The goal is to treat Foodify like a real production system:
 ---
 
 ## Structure
-
+```
 docs/
 ├── README.md
 ├── 01-baseline/
@@ -37,7 +37,7 @@ docs/
 ├── 03-architecture-decisions # ADRs for important decisions
 ├── 04-load-tests # Scripts, results, analysis
 └── 05-diagrams # Architecture and data-flow diagrams
-
+```
 
 
 
