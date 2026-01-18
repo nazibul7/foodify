@@ -3,7 +3,12 @@ import Stripe from "stripe";
 import { Resturant, TMenuItemType } from "../models/resturant.model";
 import { Order } from "../models/order.model";
 
-const STRIPE = new Stripe(process.env.STRIPE_API_KEY as string);
+const PAYMENT_PROVIDER = process.env.PAYMENT_PROVIDER || "prod";
+const STRIPE =
+  PAYMENT_PROVIDER === "prod"
+    ? new Stripe(process.env.STRIPE_API_KEY as string)
+    : null;
+
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -44,13 +49,25 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       checkoutSessionRequest,
       resturant.menuItems
     );
+
+    // Handle mock mode for testing
+    if (PAYMENT_PROVIDER === "mock") {
+      newOrder.totalAmount = 5000;
+      newOrder.status = "paid";
+      await newOrder.save();
+      return res.json({
+        url: `${FRONTEND_URL}/order-status?success=true`,
+        orderId: newOrder._id
+      });
+    }
+
     const session = await createSession(
       lineItem,
       newOrder._id.toString(),
       resturant.deliveryPrice,
       resturant._id.toString()
     );
-    if (!session.url) {
+    if (!session?.url) {
       return res.status(500).json("Error creating stripe session");
     }
     await newOrder.save();
@@ -91,7 +108,10 @@ const createSession = async (
   deliveryPrice: number,
   resturantId: string
 ) => {
-  const sessionData = await STRIPE.checkout.sessions.create({
+  if (!STRIPE) {
+    throw new Error("Stripe is not initialized");
+  }
+  const sessionData = await STRIPE?.checkout.sessions.create({
     line_items: lineItem,
     shipping_options: [
       {
@@ -119,11 +139,14 @@ const createSession = async (
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
   try {
+    if (PAYMENT_PROVIDER === "mock") {
+      return res.status(200).send("Webhook skipped in mock mode");
+    }
     const sig = req.headers["stripe-signature"];
     if (!sig) {
       return res.status(400).send("Stripe signature is missing");
     }
-    event = STRIPE.webhooks.constructEvent(
+    event = STRIPE?.webhooks.constructEvent(
       req.body,
       sig,
       STRIPE_WEBHOOK_SECRET as string
@@ -136,7 +159,7 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
       return res.status(400).send("An unknown error occurred.");
     }
   }
-  if (event.type == "checkout.session.completed") {
+  if (event?.type == "checkout.session.completed") {
     const order = await Order.findById(event.data.object.metadata?.orderId);
     if (!order) {
       return res.status(404).json("order not found");
