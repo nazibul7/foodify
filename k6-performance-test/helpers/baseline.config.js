@@ -20,3 +20,23 @@ export const options = {
     // No thresholds in baseline - we're measuring, not asserting
     // Baseline establishes what "normal" is, not what's acceptable
 }
+const payload = JSON.stringify({
+    auth0Id: "auth0|baseline-user",
+    email: "baseline.user@test.io",
+});
+
+const checkoutData = {
+    cartItems: {
+        menuItemId: '672a496552b8d7fc5e967795',
+        name: 'Pizza',
+        quantity: 2,
+    },
+    resturantId: '672a496552b8d7fc5e967794',
+    deliveryDeatils: {
+        email: 'baseline.user@test.io',
+        name: 'Test',
+        addressLine1: 'New Town, Kolkata',
+        city: 'Kolkata',
+        country: 'India',
+    },
+};
