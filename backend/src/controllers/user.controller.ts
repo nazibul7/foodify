@@ -15,7 +15,7 @@ export const createUser = async (
     const { auth0Id } = req.body;
     const existingUser = await User.findOne({ auth0Id });
     if (existingUser) {
-      return next(errorHandler(403, "User already exist"));
+      return res.status(200).json(existingUser)
     }
     const newUser = await User.create(req.body);
     await newUser.save();
