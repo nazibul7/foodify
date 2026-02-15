@@ -41,7 +41,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       resturant: resturant,
       user: req.userId,
       status: "placed",
-      deliveryDetails: checkoutSessionRequest.deliveryDeatils,
+      deliveryDetails: checkoutSessionRequest.deliveryDetails,
       cartItems: checkoutSessionRequest.cartItems,
       createdAt: new Date(),
     });
