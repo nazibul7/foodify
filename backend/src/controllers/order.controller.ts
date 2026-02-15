@@ -18,7 +18,7 @@ type TCheckoutSessionRequest = {
     name: string;
     quantity: number;
   }[];
-  deliveryDeatils: {
+  deliveryDetails: {
     email: string;
     name: string;
     addressLine1: string;
